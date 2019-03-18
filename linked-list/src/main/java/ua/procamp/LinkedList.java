@@ -8,7 +8,7 @@ package ua.procamp;
  */
 public class LinkedList<T> implements List<T> {
 
-    private Node<T> head;
+    private Node head;
     private int size;
 
     /**
@@ -19,17 +19,17 @@ public class LinkedList<T> implements List<T> {
      * @return a new list of elements the were passed as method parameters
      */
     public static <T> List<T> of(T... elements) {
-        LinkedList list = new LinkedList();
-        Node<T> n = null;
+        LinkedList<T> list = new LinkedList<>();
+        Node prev = null;
         for (T element : elements) {
             list.size++;
             Node<T> node = new Node<>(element);
             if (list.head == null) {
                 list.head = node;
-                n = list.head;
+                prev = list.head;
             } else {
-                n.next = node;
-                n = node;
+                prev.next = node;
+                prev = node;
             }
 
         }
@@ -58,25 +58,32 @@ public class LinkedList<T> implements List<T> {
         if (index < 0 || index > size) {
             throw new IndexOutOfBoundsException();
         }
-        Node<T> tNode = new Node<>(element);
-        if (head == null) {
-            head = tNode;
-        } else {
-            if (index == 0) {
-                tNode.next = head;
-                head = tNode;
-            } else {
-                Node<T> t = head;
-                while (index != 1) {
-                    t = t.next;
-                    index--;
-                }
-                Node<T> temp = t.next;
-                t.next = tNode;
-                tNode.next = temp;
-            }
-        }
         size++;
+        Node newElem = new Node<>(element);
+
+        if (head == null) {
+            head = newElem;
+            return;
+        }
+
+        if (index == 0) {
+            newElem.next = head;
+            head = newElem;
+            return;
+        }
+
+        Node prevElem = getPrevElem(index);
+        newElem.next = prevElem.next;
+        prevElem.next = newElem;
+
+    }
+
+    private Node getPrevElem(int index) {
+        Node tempNode = head;
+        for (int i = 1; i < index; i++) {
+            tempNode = tempNode.next;
+        }
+        return tempNode;
     }
 
     /**
@@ -91,15 +98,17 @@ public class LinkedList<T> implements List<T> {
         if (index < 0 || index >= size) {
             throw new IndexOutOfBoundsException();
         }
+
         Node<T> node = new Node<>(element);
-        Node<T> t = head;
-        while (index != 1) {
-            t = t.next;
-            index--;
+        if (index == 0) {
+            node.next = head.next;
+            head = node;
+            return;
         }
-        Node<T> temp = t.next;
-        t.next = node;
-        node.next = temp.next;
+
+        Node prevNode = getPrevElem(index);
+        node.next = prevNode.next != null ? prevNode.next.next : null;
+        prevNode.next = node;
     }
 
     /**
@@ -114,13 +123,7 @@ public class LinkedList<T> implements List<T> {
         if (head == null || index < 0 || index >= size) {
             throw new IndexOutOfBoundsException();
         }
-        Node t = head;
-        while (index != 0) {
-            t = t.next;
-            index--;
-        }
-
-        return (T) t.value;
+        return index == 0 ? (T) head.value : (T) getPrevElem(index).next.value;
     }
 
     /**
@@ -134,18 +137,14 @@ public class LinkedList<T> implements List<T> {
         if (head == null) {
             throw new IndexOutOfBoundsException();
         }
-        Node<T> t = head;
+
+        size--;
         if (index == 0) {
             head = head.next;
-            size--;
-            return;
         }
-        while (index != 1) {
-            t = t.next;
-            index--;
-        }
-        t.next = t.next.next;
-        size--;
+
+        Node prevNode = getPrevElem(index);
+        prevNode.next = prevNode.next.next;
     }
 
 
@@ -159,7 +158,7 @@ public class LinkedList<T> implements List<T> {
         if (head == null) {
             return false;
         }
-        Node<T> node = head;
+        Node node = head;
         while (node.next != null) {
             if (node.value == element) {
                 return true;
@@ -194,12 +193,6 @@ public class LinkedList<T> implements List<T> {
      */
     @Override
     public void clear() {
-        if (head == null) {
-            return;
-        }
-        while (head.next != null) {
-            head = head.next;
-        }
         head = null;
         size = 0;
     }
